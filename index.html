@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/carendar.css" media="screen and (min-width:421px)">
+    <link rel="stylesheet" href="css/sp_carendar.css" media="screen and (max-width:420px)">
+    
+    <script>
+        window.addEventListener("DOMContentLoaded",function(){Init();});
+        function Init(){
+            var mainElement = document.createElement("div");
+            mainElement.setAttribute("id","main");
+            document.body.appendChild(mainElement);
+
+            var calendarframe = document.createElement("div");
+            calendarframe.setAttribute("id","calendar_frame");
+            mainElement.appendChild(calendarframe);
+
+
+            const calendarUrl = "https://holidays-jp.github.io/api/v1/" + new Date().getFullYear()+ "/date.json";
+            const tenkiUrl = "https://api.open-meteo.com/v1/forecast?latitude=36.70&longitude=137.21&daily=weathercode&current_weather=true&timezone=Asia%2FTokyo";
+
+            let tenkiData = []; //天気json受け取り用変数
+            
+            fetch(tenkiUrl) //1回目のfetch、天気データを取得
+                .then(tenki => tenki.json())
+                .then(getTenki => {
+                    tenkiData = getTenki.daily;
+                    return fetch(calendarUrl);  //2回目のfetch,祝日カレンダーを取得
+                })
+                .then(res => res.json())
+                .then(json => calendar_load(json,tenkiData))
+        }
+
+        //カレンダー描画処理
+        function calendar_load(holidayJson,tenkiData){
+            var nowdate = new Date();
+            var nowMonth = nowdate.getMonth() + 1;
+            var firstDay = (new Date(nowdate.getFullYear(),nowdate.getMonth(),1)).getDay();
+            var weekStr = ["日","月","火","水","木","金","土"];           
+            const weekEng = ["sun","mon","tue","wed","thu","fri","sat"];
+            //月タイトル表示
+            var monthElement = document.createElement("h2");
+            monthElement.setAttribute("class","month_title");
+            monthElement.textContent = nowdate.getFullYear() + "年" + nowMonth + "月";
+            document.getElementById("calendar_frame").appendChild(monthElement);
+
+            //ul要素作成
+            var ulElement = document.createElement("ul");
+            ulElement.setAttribute("class","calendar");
+            document.getElementById("calendar_frame").appendChild(ulElement);
+
+            //曜日行作成
+            for(i = 0;i < 7;i++){
+                var calendarHeader = document.createElement("li");
+                calendarHeader.setAttribute("class","header");
+                calendarHeader.textContent = weekStr[i];
+                ulElement.appendChild(calendarHeader);
+            }
+            
+            //先月分の最終日が出るので注意。表示月は+1してるのでちょうど良い
+            const getLastDay = (year, month) => {
+                return new Date(year, month, 0).getDate();
+            };
+
+            const generateWeatherIcon = weatherCode => {
+                    // https://www.jodc.go.jp/data_format/weather-code_j.html
+                    const iconText = (() => {
+                        if(weatherCode === 0) return { text: '快晴'  , emoji: '☀' };  // 0 : Clear Sky
+                        if(weatherCode === 1) return { text: '晴れ'  , emoji: '🌤' };  // 1 : Mainly Clear
+                        if(weatherCode === 2) return { text: '一部曇', emoji: '⛅' };  // 2 : Partly Cloudy
+                        if(weatherCode === 3) return { text: '曇り'  , emoji: '☁' };  // 3 : Overcast
+                        if(weatherCode <= 49) return { text: '霧'    , emoji: '🌫' };  // 45, 48 : Fog And Depositing Rime Fog
+                        if(weatherCode <= 59) return { text: '霧雨'  , emoji: '🌧' };  // 51, 53, 55 : Drizzle Light, Moderate And Dense Intensity ・ 56, 57 : Freezing Drizzle Light And Dense Intensity
+                        if(weatherCode <= 69) return { text: '雨'    , emoji: '☔' };  // 61, 63, 65 : Rain Slight, Moderate And Heavy Intensity ・66, 67 : Freezing Rain Light And Heavy Intensity
+                        if(weatherCode <= 79) return { text: '雪'    , emoji: '☃' };  // 71, 73, 75 : Snow Fall Slight, Moderate And Heavy Intensity ・ 77 : Snow Grains
+                        if(weatherCode <= 84) return { text: '俄か雨', emoji: '🌧' };  // 80, 81, 82 : Rain Showers Slight, Moderate And Violent
+                        if(weatherCode <= 94) return { text: '雪・雹', emoji: '☃' };  // 85, 86 : Snow Showers Slight And Heavy
+                        if(weatherCode <= 99) return { text: '雷雨'  , emoji: '⛈' };  // 95 : Thunderstorm Slight Or Moderate ・ 96, 99 : Thunderstorm With Slight And Heavy Hail
+                        return                       { text: '不明'  , emoji: '✨' };
+                    })();
+                 return iconText.emoji;
+            };
+
+
+            //日付マス作成
+            const dayMax = Math.ceil((firstDay + getLastDay(nowdate.getFullYear(),nowMonth)) / 7) * 7;
+            for(i = 0;i < dayMax; i++){
+                var calendarChild = document.createElement("li");
+                calendarChild.setAttribute("class","calendar_child");
+                //曜日クラスセット
+                var youbi = i % 7;  //i÷７のあまりから曜日を求める
+                calendarChild.setAttribute("class",weekEng[youbi]);
+
+                ulElement.appendChild(calendarChild);
+
+
+                var calendarText = document.createElement("h3");
+                calendarChild.appendChild(calendarText);
+                //1日の曜日になってから処理
+                if(i >= firstDay && (firstDay + getLastDay(nowdate.getFullYear(),nowMonth)) > i){                   
+                    var hiduke = nowdate.getFullYear() + "-" + ("0" + (nowdate.getMonth()+1)).slice(-2) + "-" + ("0" +(i + 1 - firstDay)).slice(-2);
+
+                    if(((new Date(hiduke)).getMonth() + 1 ) == nowMonth){
+                        //日付を入れる
+                        calendarText.textContent = i + 1 - firstDay;
+
+                        //天気表示処理
+
+                        //配列内に日付があった場合
+                        //findはコールバック関数を引数に持ち、booleanで判別する
+                        const hidukeIndex = tenkiData.time.findIndex(date => hiduke == date);
+                        if(hidukeIndex > -1){
+                            var tenkiText = document.createElement("p");
+                            tenkiText.setAttribute("class","tenki");
+                            tenkiText.textContent = generateWeatherIcon(tenkiData.weathercode[hidukeIndex]);
+                            calendarChild.appendChild(tenkiText);
+                        }
+
+                        //祝日検索
+                        if(holidayJson[hiduke]){
+                            //cssではタグセレクタと併用で区別する
+                            var holidayText = document.createElement("p");
+                            holidayText.setAttribute("class","holiday");
+                            holidayText.textContent = holidayJson[hiduke];
+                            calendarChild.appendChild(holidayText);
+
+                            calendarText.setAttribute("class","holiday");
+                        }
+
+                    }
+                } else{
+                    //月に含まれない部分はとりあえずクラスnoneで区別しておく
+                    calendarChild.setAttribute("class","none");
+                }
+
+            }
+        }
+
+        
+    </script>
+</head>
+<body>
+    
+
+</body>
+</html>

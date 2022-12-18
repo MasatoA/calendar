@@ -1,0 +1,111 @@
+body {
+    width: 350px;
+    margin: 0 auto;
+}
+
+#calendar_frame {
+    width: 350px;
+}
+
+ul.calendar {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    width: 322px;
+    border-top: 1px solid gray;
+}
+ul.calendar li {
+    width: 320px;
+    height: 40px;
+    display: block;
+    float: left;
+    border-right: 1px solid gray;
+    border-bottom: 1px solid gray;
+    border-left: 1px solid gray;
+
+}
+ul.calendar li.header{
+    display: none;
+    width:60px;
+    height: 20px;
+    background-color: #CCCCCC;
+    color: black;
+    text-align: center;
+    font-weight: bold;
+}
+ul.calendar li.header:first-child{
+    width:60px;
+    height: 20px;
+    background-color: #ff9999;
+    color: red;
+}
+ul.calendar li.header:nth-child(7){
+    width:60px;
+    height: 20px;
+    background-color: #6699ff;
+    color: blue;
+}
+ul.calendar li.sat {
+    color: blue;
+}
+ul.calendar li.sun {
+    color: red;
+    clear: both;
+}
+ul.calendar li.none{
+    display: none;
+}
+ul.calendar li h3 {
+    margin-top: 2px;
+    margin-bottom: 0;
+    margin-left: 3px;
+    margin-right: 2px;
+    width: 28px;
+    float: left;
+
+}
+ul.calendar li h3.holiday {
+    color: red;
+}
+ul.calendar li p{
+    font-size: 7pt;
+
+    
+}
+ul.calendar li p.holiday {
+    color: red;
+    width: 100px;
+    height: 28px;
+}
+.calendar_child {
+    margin: 0;
+    padding: 10px 10px;
+    width: 29px;
+    height: 47px;
+    display: block;
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
+    float: left;
+}
+.calendar_child:nth-child(7n){
+
+}
+
+ul.calendar li p.tenki {
+    display: block;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    width: 24px;
+    float:right;
+    font-size: 1.17em;
+    color: white;
+    text-shadow: 
+        2px  2px 1px gray,
+        -2px  2px 1px gray,
+        2px -2px 1px gray,
+        -2px -2px 1px gray,
+        2px  0px 1px gray,
+        0px  2px 1px gray,
+        -2px  0px 1px gray,
+        0px -2px 1px gray; 
+}
